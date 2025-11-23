@@ -34,7 +34,7 @@ CardHeader.displayName = "CardHeader";
 
 //O TÍTULO EM SI
 const CardTitle = React.forwardRef<
-  HTMLParagraphElement,
+  HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
   <h3

@@ -3,7 +3,7 @@ function App() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 space-y-8">
       {/* Exemplo 1: Usando a Primária */}
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-primaria">VistoriaPro</h1>
+        <h1 className="text-4xl font-bold text-primaria">visto.io</h1>
         <p className="text-forte font-medium">
           Sistema de Vistoria Imobiliária
         </p>

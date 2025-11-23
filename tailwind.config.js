@@ -7,19 +7,19 @@ export default {
         sans: ["Open Sans", "sans-serif"],
       },
       colors: {
-        primaria: {
+        primary: {
           DEFAULT: "#0D9488",
           foreground: "#FAFAFA",
         },
-        secundaria: {
+        secondary: {
           DEFAULT: "#99F6E4",
           foreground: "#134E4A",
         },
-        neutro: {
+        muted: {
           DEFAULT: "#FAFAFA",
           foreground: "#64748B",
         },
-        forte: {
+        accent: {
           DEFAULT: "#134E4A",
           foreground: "#FAFAFA",
         },

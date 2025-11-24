@@ -14,8 +14,9 @@ export const useInspectionStore = create<InspectionStore>((set) => ({
 
   //criando o objeto vistoria
   createInspection: (address, clientName) => {
+    const id = uuidv4();
     const newInspection: Inspection = {
-      id: uuidv4(),
+      id,
       clientName,
       propertyAddress: address,
       date: Date.now(),
@@ -26,5 +27,7 @@ export const useInspectionStore = create<InspectionStore>((set) => ({
     set({ currentInspection: newInspection });
 
     console.log("Nova vistoria criada na store:", newInspection);
+
+    return id;
   },
 }));

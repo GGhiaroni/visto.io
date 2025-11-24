@@ -6,7 +6,7 @@ import type { Inspection } from "../types/inspection";
 interface InspectionStore {
   //pode ser nula, caso não tenha nenhuma Vistoria aberta
   currentInspection: Inspection | null;
-  createInspection: (address: string, clientName: string) => void;
+  createInspection: (address: string, clientName: string) => string;
 }
 
 export const useInspectionStore = create<InspectionStore>((set) => ({

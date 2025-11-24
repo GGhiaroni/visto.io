@@ -1,5 +1,6 @@
 import { Building, Loader2, MapPin, Plus, User } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "../components/ui/Button";
 import {
@@ -25,6 +26,8 @@ const Home = () => {
   const [number, setNumber] = useState("");
   const [complement, setComplement] = useState("");
 
+  const navigate = useNavigate();
+
   const { createInspection } = useInspectionStore();
 
   const handleStartInspection = () => {
@@ -39,7 +42,7 @@ const Home = () => {
       complement ? `- ${complement}` : ""
     } - ${neighborhood} - ${city}/${uf}`;
 
-    createInspection(fullAddress, clientName);
+    const idCriado = createInspection(fullAddress, clientName);
 
     setClientName("");
     setCep("");
@@ -50,6 +53,8 @@ const Home = () => {
     setCity("");
 
     toast.success("Vistoria iniciada com sucesso! Verifique o console!");
+
+    navigate(`/vistoria/${idCriado}`);
   };
 
   const handleBlurCep = async () => {

@@ -132,6 +132,7 @@ const InspectionDetails = () => {
             <Card
               key={room.id}
               className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer active:scale-95 transform"
+              onClick={() => navigate(`/vistoria/${id}/comodo/${room.id}`)}
             >
               <div className="flex items-center gap-3">
                 {room.isCompleted ? (

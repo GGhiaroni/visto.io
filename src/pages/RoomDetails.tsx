@@ -1,8 +1,8 @@
 import {
   ArrowLeft,
-  CircleDashed,
+  CircleAlert,
+  ClipboardClock,
   Plus,
-  ThumbsDown,
   ThumbsUp,
 } from "lucide-react";
 import { useState } from "react";
@@ -34,11 +34,28 @@ const RoomDetails = () => {
   const itemInspectionStatus = (status: string) => {
     switch (status) {
       case "pending":
-        return <CircleDashed className="h-4 w-4 text-primary" />;
+        return (
+          <span className="inline-flex gap-2 items-center">
+            <ClipboardClock className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium leading-none">pendente</span>
+          </span>
+        );
       case "ok":
-        return <ThumbsUp className="h-4 w-4 text-primary" />;
+        return (
+          <span className="inline-flex gap-2 items-center">
+            <ThumbsUp className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium leading-none">ok</span>;
+          </span>
+        );
       case "issue":
-        return <ThumbsDown className="h-4 w-4 text-primary" />;
+        return (
+          <span className="inline-flex gap-2 items-center">
+            <CircleAlert className="h-4 w-4 text-red-600" />
+            <span className="text-sm font-medium leading-none">problema</span>
+          </span>
+        );
+      default:
+        return null;
     }
   };
 

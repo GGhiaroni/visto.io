@@ -1,4 +1,10 @@
-import { ArrowLeft, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleDashed,
+  Plus,
+  ThumbsDown,
+  ThumbsUp,
+} from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -24,6 +30,17 @@ const RoomDetails = () => {
   };
 
   const currentRoom = currentInspection?.rooms.find((r) => r.id === roomId);
+
+  const itemInspectionStatus = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <CircleDashed className="h-4 w-4 text-primary" />;
+      case "ok":
+        return <ThumbsUp className="h-4 w-4 text-primary" />;
+      case "issue":
+        return <ThumbsDown className="h-4 w-4 text-primary" />;
+    }
+  };
 
   if (!currentInspection || !currentRoom) {
     return (
@@ -76,11 +93,8 @@ const RoomDetails = () => {
             className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer active:scale-95 transform"
             onClick={() => navigate("")}
           >
-            <div className="flex items-center gap-3">
-              <span className="font-medium text-slate-700">
-                {roomItem.name}
-              </span>
-            </div>
+            <span className="font-medium text-slate-700">{roomItem.name}</span>
+            <span>{itemInspectionStatus(roomItem.status)}</span>
           </Card>
         ))}
       </div>

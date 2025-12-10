@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
 import { useInspectionStore } from "../store/inspectionStore";
 
@@ -60,6 +61,28 @@ const RoomDetails = () => {
         <Button onClick={handleAddItemInspection}>
           <Plus className="h-5 w-5" />
         </Button>
+      </div>
+
+      <div className="grid gap-3">
+        {currentRoom.items.length === 0 && (
+          <p className="text-center text-slate-400 py-4 text-sm">
+            Nenhum cômodo adicionado até o momento.
+          </p>
+        )}
+
+        {currentRoom.items.map((roomItem) => (
+          <Card
+            key={roomItem.id}
+            className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer active:scale-95 transform"
+            onClick={() => navigate("")}
+          >
+            <div className="flex items-center gap-3">
+              <span className="font-medium text-slate-700">
+                {roomItem.name}
+              </span>
+            </div>
+          </Card>
+        ))}
       </div>
     </div>
   );

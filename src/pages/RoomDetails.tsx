@@ -1,12 +1,26 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
 import { useInspectionStore } from "../store/inspectionStore";
 
 const RoomDetails = () => {
   const { id, roomId } = useParams();
   const navigate = useNavigate();
-  const { currentInspection } = useInspectionStore();
+  const { currentInspection, addItemInspection } = useInspectionStore();
+
+  const [newItemName, setNewItemName] = useState("");
+
+  const handleAddItemInspection = () => {
+    if (!newItemName.trim()) return;
+    if (!roomId?.trim()) return;
+
+    addItemInspection(roomId, newItemName);
+    setNewItemName("");
+    toast.success("Item adicionado com sucesso!");
+  };
 
   const currentRoom = currentInspection?.rooms.find((r) => r.id === roomId);
 
@@ -36,8 +50,16 @@ const RoomDetails = () => {
         </div>
       </div>
 
-      <div className="text-center py-10 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-        <p>Aqui vamos listar: Paredes, Pisos, Janelas...</p>
+      <div className="flex gap-2">
+        <Input
+          placeholder="Adicionar item inspecionado"
+          value={newItemName}
+          onChange={(e) => setNewItemName(e.target.value)}
+          className="flex-1"
+        />
+        <Button onClick={handleAddItemInspection}>
+          <Plus className="h-5 w-5" />
+        </Button>
       </div>
     </div>
   );

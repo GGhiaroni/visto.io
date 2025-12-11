@@ -1,6 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
-import type { Inspection, InspectionItem, Room } from "../types/inspection";
+import type {
+  Inspection,
+  InspectionItem,
+  ItemStatus,
+  Room,
+} from "../types/inspection";
 
 //minha store de vistorias
 interface InspectionStore {
@@ -9,6 +14,11 @@ interface InspectionStore {
   createInspection: (address: string, clientName: string) => string;
   addRoom: (roomName: string) => void;
   addItemInspection: (roomId: string, itemName: string) => void;
+  updateItemStatus: (
+    roomId: string,
+    itemId: string,
+    newStatus: ItemStatus
+  ) => void;
 }
 
 export const useInspectionStore = create<InspectionStore>((set) => ({
@@ -81,4 +91,35 @@ export const useInspectionStore = create<InspectionStore>((set) => ({
         },
       };
     }),
+
+  updateItemStatus: (roomId, itemId, newStatus) => {
+    set((state) => {
+      if (!state.currentInspection) return state;
+
+      const updatedRooms = state.currentInspection.rooms.map((room) => {
+        if (room.id !== roomId) return room;
+
+        const updatedItems = room.items.map((item) => {
+          if (item.id !== itemId) return item;
+
+          return {
+            ...item,
+            status: newStatus,
+          };
+        });
+
+        return {
+          ...room,
+          items: updatedItems,
+        };
+      });
+
+      return {
+        currentInspection: {
+          ...state.currentInspection,
+          rooms: updatedRooms,
+        },
+      };
+    });
+  },
 }));

@@ -3,6 +3,7 @@ import { ToastContainer } from "react-toastify";
 import AppLayout from "./components/layout/AppLayout";
 import Home from "./pages/Home";
 import InspectionDetails from "./pages/InspectionDetails";
+import ItemInspectionDetails from "./pages/ItemInspectionDetails";
 import RoomDetails from "./pages/RoomDetails";
 
 function App() {
@@ -27,6 +28,10 @@ function App() {
           <Route
             path="/vistoria/:id/comodo/:roomId"
             element={<RoomDetails />}
+          />
+          <Route
+            path="/vistoria/:id/comodo/:roomId/item/:itemId"
+            element={<ItemInspectionDetails />}
           />
         </Route>
       </Routes>

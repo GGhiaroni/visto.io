@@ -44,7 +44,7 @@ const RoomDetails = () => {
         return (
           <span className="inline-flex gap-2 items-center">
             <ThumbsUp className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium leading-none">ok</span>;
+            <span className="text-sm font-medium leading-none">ok</span>
           </span>
         );
       case "issue":
@@ -108,7 +108,9 @@ const RoomDetails = () => {
           <Card
             key={roomItem.id}
             className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer active:scale-95 transform"
-            onClick={() => navigate("")}
+            onClick={() =>
+              navigate(`/vistoria/${id}/comodo/${roomId}/item/${roomItem.id}`)
+            }
           >
             <span className="font-medium text-slate-700">{roomItem.name}</span>
             <span>{itemInspectionStatus(roomItem.status)}</span>

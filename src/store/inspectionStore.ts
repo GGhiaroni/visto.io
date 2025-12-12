@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
 import type {
+  Annotation,
   Inspection,
   InspectionItem,
   ItemStatus,
@@ -19,6 +20,7 @@ interface InspectionStore {
     itemId: string,
     newStatus: ItemStatus
   ) => void;
+  addAnnotation: (roomId: string, itemId: string, text: string) => void;
 }
 
 export const useInspectionStore = create<InspectionStore>((set) => ({
@@ -111,6 +113,43 @@ export const useInspectionStore = create<InspectionStore>((set) => ({
         return {
           ...room,
           items: updatedItems,
+        };
+      });
+
+      return {
+        currentInspection: {
+          ...state.currentInspection,
+          rooms: updatedRooms,
+        },
+      };
+    });
+  },
+
+  addAnnotation: (roomId, itemId, text) => {
+    set((state) => {
+      if (!state.currentInspection) return state;
+
+      const updatedRooms = state.currentInspection.rooms.map((room) => {
+        if (room.id !== roomId) return room;
+
+        const updatedItem = room.items.map((item) => {
+          if (item.id !== itemId) return item;
+
+          const newAnnotation: Annotation = {
+            id: uuidv4(),
+            text: text,
+            timestamp: Date.now(),
+          };
+
+          return {
+            ...item,
+            annotations: [...item.annotations, newAnnotation],
+          };
+        });
+
+        return {
+          ...room,
+          items: updatedItem,
         };
       });
 

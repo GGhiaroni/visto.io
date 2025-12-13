@@ -37,21 +37,18 @@ const RoomDetails = () => {
         return (
           <span className="inline-flex gap-2 items-center">
             <ClipboardClock className="h-4 w-4 text-amber-500" />
-            <span className="text-sm font-medium leading-none">pendente</span>
           </span>
         );
       case "ok":
         return (
           <span className="inline-flex gap-2 items-center">
             <ThumbsUp className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium leading-none">ok</span>
           </span>
         );
       case "issue":
         return (
           <span className="inline-flex gap-2 items-center">
             <CircleAlert className="h-4 w-4 text-red-600" />
-            <span className="text-sm font-medium leading-none">problema</span>
           </span>
         );
       default:
@@ -100,7 +97,7 @@ const RoomDetails = () => {
       <div className="grid gap-3">
         {currentRoom.items.length === 0 && (
           <p className="text-center text-slate-400 py-4 text-sm">
-            Nenhum cômodo adicionado até o momento.
+            Nenhum item adicionado neste cômodo.
           </p>
         )}
 

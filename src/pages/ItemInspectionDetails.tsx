@@ -1,12 +1,15 @@
 import {
   AlertCircle,
   ArrowLeft,
+  Camera,
   CheckCircle2,
   CircleDashed,
+  ImageIcon,
   MessageSquare,
   Send,
 } from "lucide-react";
-import { useState } from "react";
+import { type ChangeEvent, useRef, useState } from "react";
+
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { cn } from "../components/lib/utils";
@@ -16,7 +19,7 @@ import { useInspectionStore } from "../store/inspectionStore";
 const ItemInspectionDetails = () => {
   const { id, roomId, itemId } = useParams();
   const navigate = useNavigate();
-  const { currentInspection, updateItemStatus, addAnnotation } =
+  const { currentInspection, updateItemStatus, addAnnotation, addPhoto } =
     useInspectionStore();
 
   const [addAnnotationText, setAddAnnotationText] = useState("");
@@ -24,6 +27,8 @@ const ItemInspectionDetails = () => {
   const currentRoom = currentInspection?.rooms.find(
     (room) => room.id === roomId
   );
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentItem = currentRoom?.items.find((item) => item.id === itemId);
 
@@ -54,6 +59,23 @@ const ItemInspectionDetails = () => {
     }
   };
 
+  const handleTriggerCamera = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handlePhotoSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (file && roomId && itemId) {
+      const previewUrl = URL.createObjectURL(file);
+
+      addPhoto(roomId, itemId, previewUrl);
+
+      e.target.value = "";
+
+      toast.success("Foto adicionada!");
+    }
+  };
   return (
     <div className="space-y-6 pb-10">
       <div className="flex items-center gap-4">
@@ -177,6 +199,64 @@ const ItemInspectionDetails = () => {
           )}
         </div>
       </div>
+      <hr className="border-slate-100" />
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider">
+            Evidências Fotográficas
+          </h3>
+          <span className="text-xs text-slate-400">
+            {currentItem.photos.length} fotos
+          </span>
+        </div>
+
+        <Button
+          variant="outline"
+          className="w-full h-16 border-dashed border-2 border-slate-200 hover:border-primary/50 hover:bg-slate-50 text-slate-500 gap-2"
+          onClick={handleTriggerCamera}
+        >
+          <Camera className="h-5 w-5" />
+          Adicionar Foto
+        </Button>
+
+        {currentItem.photos.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3">
+            {currentItem.photos.map((photo) => (
+              <div key={photo.id} className="relative group aspect-square">
+                <img
+                  src={photo.url}
+                  alt="Evidência"
+                  className="w-full h-full object-cover rounded-xl border border-slate-100 shadow-sm"
+                />
+
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 rounded-b-xl">
+                  <p className="text-[10px] text-white/90 text-right">
+                    {new Date(photo.timestamp).toLocaleTimeString("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 gap-2 text-slate-300">
+            <ImageIcon className="h-8 w-8 opacity-30" />
+            <span className="text-xs">Nenhuma foto registrada</span>
+          </div>
+        )}
+      </div>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        capture="environment"
+        onChange={handlePhotoSelect}
+      />
     </div>
   );
 };

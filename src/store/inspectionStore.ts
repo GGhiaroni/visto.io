@@ -5,6 +5,7 @@ import type {
   Inspection,
   InspectionItem,
   ItemStatus,
+  Photo,
   Room,
 } from "../types/inspection";
 
@@ -21,6 +22,7 @@ interface InspectionStore {
     newStatus: ItemStatus
   ) => void;
   addAnnotation: (roomId: string, itemId: string, text: string) => void;
+  addPhoto: (roomId: string, itemId: string, photoUrl: string) => void;
 }
 
 export const useInspectionStore = create<InspectionStore>((set) => ({
@@ -157,6 +159,43 @@ export const useInspectionStore = create<InspectionStore>((set) => ({
         currentInspection: {
           ...state.currentInspection,
           rooms: updatedRooms,
+        },
+      };
+    });
+  },
+
+  addPhoto: (roomId, itemId, photoUrl) => {
+    set((state) => {
+      if (!state.currentInspection) return state;
+
+      const updatedRoom = state.currentInspection.rooms.map((r) => {
+        if (r.id !== roomId) return r;
+
+        const updatedItem = r.items.map((i) => {
+          if (i.id !== itemId) return i;
+
+          const newPhoto: Photo = {
+            id: uuidv4(),
+            url: photoUrl,
+            timestamp: Date.now(),
+          };
+
+          return {
+            ...i,
+            photos: [...i.photos, newPhoto],
+          };
+        });
+
+        return {
+          ...r,
+          items: updatedItem,
+        };
+      });
+
+      return {
+        currentInspection: {
+          ...state.currentInspection,
+          rooms: updatedRoom,
         },
       };
     });

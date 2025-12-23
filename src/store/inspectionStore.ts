@@ -10,6 +10,13 @@ import type {
   Room,
 } from "../types/inspection";
 
+export interface InspectionStats {
+  total: number;
+  completed: number;
+  issues: number;
+  progress: number;
+}
+
 //minha store de vistorias
 interface InspectionStore {
   //pode ser nula, caso não tenha nenhuma Vistoria aberta
@@ -24,11 +31,12 @@ interface InspectionStore {
   ) => void;
   addAnnotation: (roomId: string, itemId: string, text: string) => void;
   addPhoto: (roomId: string, itemId: string, photoUrl: string) => void;
+  getInspectionStats: () => InspectionStats;
 }
 
 export const useInspectionStore = create<InspectionStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       currentInspection: null,
 
       //criando o objeto vistoria
@@ -202,6 +210,44 @@ export const useInspectionStore = create<InspectionStore>()(
             },
           };
         });
+      },
+
+      getInspectionStats: () => {
+        const state = get(); //pegando o estado atual
+
+        if (!state.currentInspection) {
+          return {
+            total: 0,
+            completed: 0,
+            issues: 0,
+            progress: 0,
+          };
+        }
+
+        const rooms = state.currentInspection.rooms;
+
+        // 1. Total de Itens (Soma itens de todos os quartos)
+        const total = rooms.reduce((acc, room) => acc + room.items.length, 0);
+
+        // 2. Itens Concluídos (Qualquer status que não seja 'pending')
+        const completed = rooms.reduce(
+          (acc, room) =>
+            acc + room.items.filter((i) => i.status !== "pending").length,
+          0
+        );
+
+        // 3. Problemas (Apenas status 'issue')
+        const issues = rooms.reduce(
+          (acc, room) =>
+            acc + room.items.filter((i) => i.status === "issue").length,
+          0
+        );
+
+        // 4. Progresso em Porcentagem
+        const progress =
+          total === 0 ? 0 : Math.round((completed / total) * 100);
+
+        return { total, completed, issues, progress };
       },
     }),
     {

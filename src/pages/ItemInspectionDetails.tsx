@@ -12,7 +12,7 @@ import { type ChangeEvent, useRef, useState } from "react";
 
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { cn } from "../components/lib/utils";
+import { cn, convertFileToBase64 } from "../components/lib/utils";
 import { Button } from "../components/ui/Button";
 import { useInspectionStore } from "../store/inspectionStore";
 
@@ -63,19 +63,25 @@ const ItemInspectionDetails = () => {
     fileInputRef.current?.click();
   };
 
-  const handlePhotoSelect = (e: ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (file && roomId && itemId) {
-      const previewUrl = URL.createObjectURL(file);
+      try {
+        const base64Photo = await convertFileToBase64(file);
 
-      addPhoto(roomId, itemId, previewUrl);
+        addPhoto(roomId, itemId, base64Photo);
 
-      e.target.value = "";
+        e.target.value = "";
 
-      toast.success("Foto adicionada!");
+        toast.success("Foto adicionada!");
+      } catch (error) {
+        console.error("Erro ao converter a imagem", error);
+        toast.error("Erro ao processar a imagem. Tente novamente mais tarde.");
+      }
     }
   };
+
   return (
     <div className="space-y-6 pb-10">
       <div className="flex items-center gap-4">

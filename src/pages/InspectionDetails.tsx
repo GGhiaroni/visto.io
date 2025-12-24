@@ -1,3 +1,4 @@
+import { PDFDownloadLink } from "@react-pdf/renderer";
 import {
   AlertCircle,
   ArrowLeft,
@@ -12,6 +13,7 @@ import {
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { cn } from "../components/lib/utils";
+import { InspectionReport } from "../components/pdf/InspectionReport";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
@@ -182,15 +184,21 @@ const InspectionDetails = () => {
           </div>
         </div>
 
-        <Button
-          className="w-full gap-2 mt-2"
-          variant={stats.total > 0 ? "default" : "secondary"}
-          disabled={stats.total === 0}
-          onClick={() => alert("Calma Gabriel! Isso é na Sessão 8! 📄")}
+        <PDFDownloadLink
+          document={<InspectionReport data={currentInspection} />}
+          fileName={`vistoria-${currentInspection.clientName}-${currentInspection.id}.pdf`}
         >
-          <FileText className="h-4 w-4" />
-          Gerar Relatório PDF
-        </Button>
+          {({ loading }) => (
+            <Button
+              className="w-full gap-2 mt-2"
+              disabled={loading || stats.total === 0}
+              variant={stats.total > 0 ? "default" : "secondary"}
+            >
+              <FileText className="h-4 w-4" />
+              {loading ? "Preparando PDF..." : "Baixar Relatório PDF"}
+            </Button>
+          )}
+        </PDFDownloadLink>
       </div>
 
       <div className="space-y-4 pt-4">

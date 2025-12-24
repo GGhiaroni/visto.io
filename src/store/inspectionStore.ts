@@ -15,6 +15,7 @@ export interface InspectionStats {
   completed: number;
   issues: number;
   progress: number;
+  pending: number;
 }
 
 //minha store de vistorias
@@ -221,6 +222,7 @@ export const useInspectionStore = create<InspectionStore>()(
             completed: 0,
             issues: 0,
             progress: 0,
+            pending: 0,
           };
         }
 
@@ -228,6 +230,12 @@ export const useInspectionStore = create<InspectionStore>()(
 
         // 1. Total de Itens (Soma itens de todos os quartos)
         const total = rooms.reduce((acc, room) => acc + room.items.length, 0);
+
+        const pending = rooms.reduce(
+          (acc, room) =>
+            acc + room.items.filter((i) => i.status === "pending").length,
+          0
+        );
 
         // 2. Itens Concluídos (Qualquer status que não seja 'pending')
         const completed = rooms.reduce(
@@ -247,7 +255,7 @@ export const useInspectionStore = create<InspectionStore>()(
         const progress =
           total === 0 ? 0 : Math.round((completed / total) * 100);
 
-        return { total, completed, issues, progress };
+        return { total, pending, completed, issues, progress };
       },
     }),
     {

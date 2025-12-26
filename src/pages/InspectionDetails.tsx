@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { cn } from "../components/lib/utils";
 import { InspectionReport } from "../components/pdf/InspectionReport";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
+import { cn } from "../lib/utils";
 import { useInspectionStore } from "../store/inspectionStore";
 
 const InspectionDetails = () => {

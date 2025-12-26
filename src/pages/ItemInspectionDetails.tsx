@@ -12,8 +12,8 @@ import { type ChangeEvent, useRef, useState } from "react";
 
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { cn, convertFileToBase64 } from "../components/lib/utils";
 import { Button } from "../components/ui/Button";
+import { cn, convertFileToBase64 } from "../lib/utils";
 import { useInspectionStore } from "../store/inspectionStore";
 
 const ItemInspectionDetails = () => {

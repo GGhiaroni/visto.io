@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import AppLayout from "./components/layout/AppLayout";
+import CreateInspection from "./pages/CreateInspection";
 import Home from "./pages/Home";
 import InspectionDetails from "./pages/InspectionDetails";
 import ItemInspectionDetails from "./pages/ItemInspectionDetails";
@@ -53,6 +54,7 @@ function App() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Home />} />
+          <Route path="/nova-vistoria" element={<CreateInspection />} />
           <Route path="/vistoria/:id" element={<InspectionDetails />} />
           <Route
             path="/vistoria/:id/comodo/:roomId"

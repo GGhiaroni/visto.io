@@ -34,7 +34,7 @@ interface InspectionStore {
   ) => void;
   addAnnotation: (roomId: string, itemId: string, text: string) => void;
   addPhoto: (roomId: string, itemId: string, photoUrl: string) => void;
-  getInspectionStats: () => InspectionStats;
+  getInspectionStats: (inspection?: Inspection) => InspectionStats;
 }
 
 export const useInspectionStore = create<InspectionStore>()(
@@ -230,13 +230,17 @@ export const useInspectionStore = create<InspectionStore>()(
         });
       },
 
-      getInspectionStats: () => {
+      getInspectionStats: (inspection) => {
         const state = get();
-        if (!state.currentInspection) {
+
+        const target = inspection || state.currentInspection;
+
+        if (!target) {
           return { total: 0, completed: 0, issues: 0, progress: 0, pending: 0 };
         }
 
-        const rooms = state.currentInspection.rooms;
+        const rooms = target.rooms;
+
         const total = rooms.reduce((acc, room) => acc + room.items.length, 0);
         const pending = rooms.reduce(
           (acc, room) =>

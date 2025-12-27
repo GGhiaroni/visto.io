@@ -8,6 +8,7 @@ import {
   Home,
   PieChart,
   Plus,
+  Trash2,
   User,
 } from "lucide-react";
 import { useState } from "react";
@@ -23,7 +24,7 @@ const InspectionDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { currentInspection, addRoom, getInspectionStats } =
+  const { currentInspection, addRoom, getInspectionStats, deleteRoom } =
     useInspectionStore();
 
   const [newRoomName, setNewRoomName] = useState("");
@@ -38,6 +39,17 @@ const InspectionDetails = () => {
     if (!newRoomName.trim()) return;
     addRoom(newRoomName);
     setNewRoomName("");
+  };
+
+  const handleDeleteRoom = (e: React.MouseEvent, roomId: string) => {
+    e.stopPropagation();
+    if (
+      confirm(
+        "Tem certeza que deseja excluir este cômodo e todos os seus itens?"
+      )
+    ) {
+      deleteRoom(roomId);
+    }
   };
 
   return (
@@ -124,7 +136,7 @@ const InspectionDetails = () => {
 
           <div className="bg-green-200 p-3 rounded-xl border border-green-300 flex flex-col items-center justify-center gap-1">
             <span className="text-2xl font-bold text-green-600">
-              {stats.completed}
+              {stats.ok}
             </span>
             <span className="text-[10px] uppercase text-green-600 font-bold">
               OK
@@ -171,12 +183,12 @@ const InspectionDetails = () => {
                 stats.pending > 0 ? "text-amber-500" : "text-slate-400"
               )}
             >
-              {stats.issues}
+              {stats.pending}
             </span>
             <span
               className={cn(
                 "text-[10px] uppercase font-bold",
-                stats.issues > 0 ? "text-amber-500" : "text-slate-400"
+                stats.pending > 0 ? "text-amber-500" : "text-slate-400"
               )}
             >
               Pendentes
@@ -233,7 +245,7 @@ const InspectionDetails = () => {
             return (
               <Card
                 key={room.id}
-                className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer active:scale-95"
+                className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer"
                 onClick={() => navigate(`/vistoria/${id}/comodo/${room.id}`)}
               >
                 <div className="flex items-center gap-3">
@@ -256,8 +268,17 @@ const InspectionDetails = () => {
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-400">
-                  {roomItemsCount} itens
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-400">
+                    {roomItemsCount} {roomItemsCount > 1 ? "itens" : "item"}
+                  </span>
+
+                  <button
+                    onClick={(e) => handleDeleteRoom(e, room.id)}
+                    className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </Card>
             );

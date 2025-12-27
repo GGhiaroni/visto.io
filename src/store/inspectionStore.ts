@@ -20,8 +20,10 @@ export interface InspectionStats {
 
 //minha store de vistorias
 interface InspectionStore {
+  inspections: Inspection[];
   //pode ser nula, caso não tenha nenhuma Vistoria aberta
   currentInspection: Inspection | null;
+  setCurrentInspection: (id: string) => void;
   createInspection: (address: string, clientName: string) => string;
   addRoom: (roomName: string) => void;
   addItemInspection: (roomId: string, itemName: string) => void;
@@ -38,9 +40,9 @@ interface InspectionStore {
 export const useInspectionStore = create<InspectionStore>()(
   persist(
     (set, get) => ({
+      inspections: [], // Começa vazio
       currentInspection: null,
 
-      //criando o objeto vistoria
       createInspection: (address, clientName) => {
         const id = uuidv4();
         const newInspection: Inspection = {
@@ -48,15 +50,33 @@ export const useInspectionStore = create<InspectionStore>()(
           clientName,
           propertyAddress: address,
           date: Date.now(),
-          status: "draft", //começa como rascunho
-          rooms: [], //começa sem cômodos
+          status: "draft",
+          rooms: [],
         };
 
-        set({ currentInspection: newInspection });
+        set((state) => ({
+          currentInspection: newInspection,
+          inspections: [newInspection, ...state.inspections],
+        }));
 
-        console.log("Nova vistoria criada na store:", newInspection);
-
+        console.log("Nova vistoria criada:", newInspection);
         return id;
+      },
+
+      setCurrentInspection: (id) => {
+        const state = get();
+        const found = state.inspections.find((i) => i.id === id);
+
+        if (found) {
+          const updated = { ...found, date: Date.now() };
+
+          const otherInspections = state.inspections.filter((i) => i.id !== id);
+
+          set({
+            currentInspection: updated,
+            inspections: [updated, ...otherInspections],
+          });
+        }
       },
 
       addRoom: (roomName) =>
@@ -67,14 +87,20 @@ export const useInspectionStore = create<InspectionStore>()(
             id: uuidv4(),
             name: roomName,
             isCompleted: false,
-            items: [], // aqui, vou começar vazio
+            items: [],
+          };
+
+          const updatedInspection = {
+            ...state.currentInspection,
+            rooms: [...state.currentInspection.rooms, newRoom],
           };
 
           return {
-            currentInspection: {
-              ...state.currentInspection,
-              rooms: [...state.currentInspection.rooms, newRoom],
-            },
+            currentInspection: updatedInspection,
+
+            inspections: state.inspections.map((i) =>
+              i.id === updatedInspection.id ? updatedInspection : i
+            ),
           };
         }),
 
@@ -92,19 +118,21 @@ export const useInspectionStore = create<InspectionStore>()(
 
           const updatedRooms = state.currentInspection.rooms.map((room) => {
             if (room.id === roomId) {
-              return {
-                ...room,
-                items: [...room.items, newInspectionItem],
-              };
+              return { ...room, items: [...room.items, newInspectionItem] };
             }
             return room;
           });
 
+          const updatedInspection = {
+            ...state.currentInspection,
+            rooms: updatedRooms,
+          };
+
           return {
-            currentInspection: {
-              ...state.currentInspection,
-              rooms: updatedRooms,
-            },
+            currentInspection: updatedInspection,
+            inspections: state.inspections.map((i) =>
+              i.id === updatedInspection.id ? updatedInspection : i
+            ),
           };
         }),
 
@@ -114,27 +142,23 @@ export const useInspectionStore = create<InspectionStore>()(
 
           const updatedRooms = state.currentInspection.rooms.map((room) => {
             if (room.id !== roomId) return room;
-
             const updatedItems = room.items.map((item) => {
               if (item.id !== itemId) return item;
-
-              return {
-                ...item,
-                status: newStatus,
-              };
+              return { ...item, status: newStatus };
             });
-
-            return {
-              ...room,
-              items: updatedItems,
-            };
+            return { ...room, items: updatedItems };
           });
 
+          const updatedInspection = {
+            ...state.currentInspection,
+            rooms: updatedRooms,
+          };
+
           return {
-            currentInspection: {
-              ...state.currentInspection,
-              rooms: updatedRooms,
-            },
+            currentInspection: updatedInspection,
+            inspections: state.inspections.map((i) =>
+              i.id === updatedInspection.id ? updatedInspection : i
+            ),
           };
         });
       },
@@ -145,33 +169,31 @@ export const useInspectionStore = create<InspectionStore>()(
 
           const updatedRooms = state.currentInspection.rooms.map((room) => {
             if (room.id !== roomId) return room;
-
             const updatedItem = room.items.map((item) => {
               if (item.id !== itemId) return item;
-
               const newAnnotation: Annotation = {
                 id: uuidv4(),
                 text: text,
                 timestamp: Date.now(),
               };
-
               return {
                 ...item,
                 annotations: [...item.annotations, newAnnotation],
               };
             });
-
-            return {
-              ...room,
-              items: updatedItem,
-            };
+            return { ...room, items: updatedItem };
           });
 
+          const updatedInspection = {
+            ...state.currentInspection,
+            rooms: updatedRooms,
+          };
+
           return {
-            currentInspection: {
-              ...state.currentInspection,
-              rooms: updatedRooms,
-            },
+            currentInspection: updatedInspection,
+            inspections: state.inspections.map((i) =>
+              i.id === updatedInspection.id ? updatedInspection : i
+            ),
           };
         });
       },
@@ -180,78 +202,57 @@ export const useInspectionStore = create<InspectionStore>()(
         set((state) => {
           if (!state.currentInspection) return state;
 
-          const updatedRoom = state.currentInspection.rooms.map((r) => {
+          const updatedRooms = state.currentInspection.rooms.map((r) => {
             if (r.id !== roomId) return r;
-
             const updatedItem = r.items.map((i) => {
               if (i.id !== itemId) return i;
-
               const newPhoto: Photo = {
                 id: uuidv4(),
                 url: photoUrl,
                 timestamp: Date.now(),
               };
-
-              return {
-                ...i,
-                photos: [...i.photos, newPhoto],
-              };
+              return { ...i, photos: [...i.photos, newPhoto] };
             });
-
-            return {
-              ...r,
-              items: updatedItem,
-            };
+            return { ...r, items: updatedItem };
           });
 
+          const updatedInspection = {
+            ...state.currentInspection,
+            rooms: updatedRooms,
+          };
+
           return {
-            currentInspection: {
-              ...state.currentInspection,
-              rooms: updatedRoom,
-            },
+            currentInspection: updatedInspection,
+            inspections: state.inspections.map((i) =>
+              i.id === updatedInspection.id ? updatedInspection : i
+            ),
           };
         });
       },
 
       getInspectionStats: () => {
-        const state = get(); //pegando o estado atual
-
+        const state = get();
         if (!state.currentInspection) {
-          return {
-            total: 0,
-            completed: 0,
-            issues: 0,
-            progress: 0,
-            pending: 0,
-          };
+          return { total: 0, completed: 0, issues: 0, progress: 0, pending: 0 };
         }
 
         const rooms = state.currentInspection.rooms;
-
-        // 1. Total de Itens (Soma itens de todos os quartos)
         const total = rooms.reduce((acc, room) => acc + room.items.length, 0);
-
         const pending = rooms.reduce(
           (acc, room) =>
             acc + room.items.filter((i) => i.status === "pending").length,
           0
         );
-
-        // 2. Itens Concluídos (Qualquer status que não seja 'pending')
         const completed = rooms.reduce(
           (acc, room) =>
             acc + room.items.filter((i) => i.status !== "pending").length,
           0
         );
-
-        // 3. Problemas (Apenas status 'issue')
         const issues = rooms.reduce(
           (acc, room) =>
             acc + room.items.filter((i) => i.status === "issue").length,
           0
         );
-
-        // 4. Progresso em Porcentagem
         const progress =
           total === 0 ? 0 : Math.round((completed / total) * 100);
 

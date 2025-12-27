@@ -7,6 +7,7 @@ import {
   ImageIcon,
   MessageSquare,
   Send,
+  Trash2,
 } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
@@ -19,8 +20,13 @@ import { useInspectionStore } from "../store/inspectionStore";
 const ItemInspectionDetails = () => {
   const { id, roomId, itemId } = useParams();
   const navigate = useNavigate();
-  const { currentInspection, updateItemStatus, addAnnotation, addPhoto } =
-    useInspectionStore();
+  const {
+    currentInspection,
+    updateItemStatus,
+    addAnnotation,
+    addPhoto,
+    deleteItemInspection,
+  } = useInspectionStore();
 
   const [addAnnotationText, setAddAnnotationText] = useState("");
 
@@ -82,21 +88,42 @@ const ItemInspectionDetails = () => {
     }
   };
 
+  const handleDeleteItemInspection = () => {
+    if (confirm("Tem certeza que deseja excluir este item?")) {
+      if (roomId && itemId) {
+        deleteItemInspection(roomId, itemId);
+        navigate(`/vistoria/${id}/comodo/${roomId}`);
+        toast.success("Item excluído com sucesso.");
+      }
+    }
+  };
+
   return (
     <div className="space-y-6 pb-10">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/vistoria/${id}/comodo/${roomId}`)}
+            className="-ml-2"
+          >
+            <ArrowLeft className="h-6 w-6 text-slate-700" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold text-forte">{currentItem.name}</h1>
+            <p className="text-xs text-slate-500">Local: {currentRoom.name}</p>
+          </div>
+        </div>
+
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate(`/vistoria/${id}/comodo/${roomId}`)}
-          className="-ml-2"
+          className="text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+          onClick={handleDeleteItemInspection}
         >
-          <ArrowLeft className="h-6 w-6 text-slate-700" />
+          <Trash2 className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="text-xl font-bold text-forte">{currentItem.name}</h1>
-          <p className="text-xs text-slate-500">Local: {currentRoom.name}</p>
-        </div>
       </div>
 
       <div className="space-y-3">

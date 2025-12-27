@@ -55,7 +55,7 @@ const Login = () => {
           <p className="text-slate-500">
             {isRegistering
               ? "Comece a fazer vistorias hoje."
-              : "Bem-vindo ao Visto.io"}
+              : "Bem-vindo ao visto.io"}
           </p>
         </div>
 

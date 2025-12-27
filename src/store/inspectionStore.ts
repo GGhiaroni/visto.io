@@ -13,6 +13,7 @@ import type {
 export interface InspectionStats {
   total: number;
   completed: number;
+  ok: number;
   issues: number;
   progress: number;
   pending: number;
@@ -26,7 +27,9 @@ interface InspectionStore {
   setCurrentInspection: (id: string) => void;
   createInspection: (address: string, clientName: string) => string;
   addRoom: (roomName: string) => void;
+  deleteRoom: (roomId: string) => void;
   addItemInspection: (roomId: string, itemName: string) => void;
+  deleteItemInspection: (roomId: string, itemId: string) => void;
   updateItemStatus: (
     roomId: string,
     itemId: string,
@@ -104,6 +107,28 @@ export const useInspectionStore = create<InspectionStore>()(
           };
         }),
 
+      deleteRoom: (roomId) => {
+        set((state) => {
+          if (!state.currentInspection) return state;
+
+          const updatedRooms = state.currentInspection.rooms.filter(
+            (r) => r.id !== roomId
+          );
+
+          const updatedInspection = {
+            ...state.currentInspection,
+            rooms: updatedRooms,
+          };
+
+          return {
+            currentInspection: updatedInspection,
+            inspections: state.inspections.map((i) =>
+              i.id === updatedInspection.id ? updatedInspection : i
+            ),
+          };
+        });
+      },
+
       addItemInspection: (roomId, itemName) =>
         set((state) => {
           if (!state.currentInspection) return state;
@@ -121,6 +146,32 @@ export const useInspectionStore = create<InspectionStore>()(
               return { ...room, items: [...room.items, newInspectionItem] };
             }
             return room;
+          });
+
+          const updatedInspection = {
+            ...state.currentInspection,
+            rooms: updatedRooms,
+          };
+
+          return {
+            currentInspection: updatedInspection,
+            inspections: state.inspections.map((i) =>
+              i.id === updatedInspection.id ? updatedInspection : i
+            ),
+          };
+        }),
+
+      deleteItemInspection: (roomId, itemId) =>
+        set((state) => {
+          if (!state.currentInspection) return state;
+
+          const updatedRooms = state.currentInspection.rooms.map((room) => {
+            if (room.id !== roomId) return room;
+
+            return {
+              ...room,
+              items: room.items.filter((i) => i.id !== itemId),
+            };
           });
 
           const updatedInspection = {
@@ -236,20 +287,23 @@ export const useInspectionStore = create<InspectionStore>()(
         const target = inspection || state.currentInspection;
 
         if (!target) {
-          return { total: 0, completed: 0, issues: 0, progress: 0, pending: 0 };
+          return {
+            total: 0,
+            completed: 0,
+            ok: 0,
+            issues: 0,
+            progress: 0,
+            pending: 0,
+          };
         }
 
         const rooms = target.rooms;
 
         const total = rooms.reduce((acc, room) => acc + room.items.length, 0);
+
         const pending = rooms.reduce(
           (acc, room) =>
             acc + room.items.filter((i) => i.status === "pending").length,
-          0
-        );
-        const completed = rooms.reduce(
-          (acc, room) =>
-            acc + room.items.filter((i) => i.status !== "pending").length,
           0
         );
         const issues = rooms.reduce(
@@ -257,10 +311,18 @@ export const useInspectionStore = create<InspectionStore>()(
             acc + room.items.filter((i) => i.status === "issue").length,
           0
         );
+
+        const ok = rooms.reduce(
+          (acc, r) => acc + r.items.filter((i) => i.status === "ok").length,
+          0
+        );
+
+        const completed = total - pending;
+
         const progress =
           total === 0 ? 0 : Math.round((completed / total) * 100);
 
-        return { total, pending, completed, issues, progress };
+        return { total, pending, completed, ok, issues, progress };
       },
     }),
     {

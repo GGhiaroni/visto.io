@@ -37,6 +37,7 @@ interface InspectionStore {
   ) => void;
   addAnnotation: (roomId: string, itemId: string, text: string) => void;
   addPhoto: (roomId: string, itemId: string, photoUrl: string) => void;
+  deletePhoto: (roomId: string, itemId: string, photoId: string) => void;
   getInspectionStats: (inspection?: Inspection) => InspectionStats;
 }
 
@@ -280,6 +281,36 @@ export const useInspectionStore = create<InspectionStore>()(
           };
         });
       },
+
+      deletePhoto: (roomId, itemId, photoId) =>
+        set((state) => {
+          if (!state.currentInspection) return state;
+
+          const updatedRooms = state.currentInspection.rooms.map((r) => {
+            if (r.id !== roomId) return r;
+
+            const updatedItems = r.items.map((i) => {
+              if (i.id !== itemId) return i;
+
+              const updatedPhotos = i.photos.filter((p) => p.id !== photoId);
+
+              return { ...i, photos: updatedPhotos };
+            });
+            return { ...r, items: updatedItems };
+          });
+
+          const updatedInspection = {
+            ...state.currentInspection,
+            rooms: updatedRooms,
+          };
+
+          return {
+            currentInspection: updatedInspection,
+            inspections: state.inspections.map((i) =>
+              i.id === updatedInspection.id ? updatedInspection : i
+            ),
+          };
+        }),
 
       getInspectionStats: (inspection) => {
         const state = get();

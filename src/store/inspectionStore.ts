@@ -16,7 +16,6 @@ import type {
   Inspection,
   InspectionStats,
   ItemStatus,
-  Room,
 } from "../types/inspection";
 
 interface InspectionStore {
@@ -156,22 +155,21 @@ export const useInspectionStore = create<InspectionStore>((set, get) => ({
     await get().syncInspections();
   },
 
-  addPhoto: async (roomId, itemId, photoUrl) => {
+  addPhoto: async (itemId, photoUrl) => {
     await addPhotoService(itemId, photoUrl);
     await get().syncInspections();
   },
 
-  deletePhoto: async (roomId, itemId, photoId) => {
+  deletePhoto: async (photoId) => {
     await deletePhotoService(photoId);
     await get().syncInspections();
   },
 
   getInspectionStats: (inspection) => {
     const state = get();
-
     const target = inspection || state.currentInspection;
 
-    if (!target || !target.rooms) {
+    if (!target || !target.rooms || target.rooms.length === 0) {
       return {
         total: 0,
         completed: 0,
@@ -184,32 +182,46 @@ export const useInspectionStore = create<InspectionStore>((set, get) => ({
 
     const rooms = target.rooms;
 
-    const total = rooms.reduce(
-      (acc: number, room: Room) => acc + (room.items?.length || 0),
+    const totalItems = rooms.reduce(
+      (acc, r) => acc + (r.items?.length || 0),
+      0
+    );
+    const okItems = rooms.reduce(
+      (acc, r) => acc + (r.items?.filter((i) => i.status === "ok").length || 0),
+      0
+    );
+    const issueItems = rooms.reduce(
+      (acc, r) =>
+        acc + (r.items?.filter((i) => i.status === "issue").length || 0),
+      0
+    );
+    const pendingItems = rooms.reduce(
+      (acc, r) =>
+        acc + (r.items?.filter((i) => i.status === "pending").length || 0),
       0
     );
 
-    const pending = rooms.reduce(
-      (acc: number, room: Room) =>
-        acc + (room.items?.filter((i) => i.status === "pending").length || 0),
-      0
+    const roomsProgress = rooms.map((room) => {
+      const items = room.items || [];
+      if (items.length === 0) return 0;
+
+      const completedInRoom = items.filter(
+        (i) => i.status !== "pending"
+      ).length;
+      return (completedInRoom / items.length) * 100;
+    });
+
+    const totalProgress = Math.round(
+      roomsProgress.reduce((acc, curr) => acc + curr, 0) / rooms.length
     );
 
-    const issues = rooms.reduce(
-      (acc: number, room: Room) =>
-        acc + (room.items?.filter((i) => i.status === "issue").length || 0),
-      0
-    );
-
-    const ok = rooms.reduce(
-      (acc: number, room: Room) =>
-        acc + (room.items?.filter((i) => i.status === "ok").length || 0),
-      0
-    );
-
-    const completed = total - pending;
-    const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
-
-    return { total, pending, completed, ok, issues, progress };
+    return {
+      total: totalItems,
+      completed: okItems + issueItems,
+      ok: okItems,
+      issues: issueItems,
+      progress: totalProgress,
+      pending: pendingItems,
+    };
   },
 }));

@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Calendar,
   CheckCircle2,
+  CircleDashed,
   FileText,
   Home,
   PieChart,
@@ -11,7 +12,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { InspectionReport } from "../components/pdf/InspectionReport";
 import { Button } from "../components/ui/Button";
@@ -24,16 +25,43 @@ const InspectionDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { currentInspection, addRoom, getInspectionStats, deleteRoom } =
-    useInspectionStore();
+  const {
+    currentInspection,
+    addRoom,
+    getInspectionStats,
+    deleteRoom,
+    syncInspections,
+    setCurrentInspection,
+  } = useInspectionStore();
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!currentInspection || currentInspection.id !== id) {
+        await syncInspections();
+        if (id) {
+          setCurrentInspection(id);
+        }
+      }
+    };
+
+    loadData();
+  }, [id]);
 
   const [newRoomName, setNewRoomName] = useState("");
 
   if (!currentInspection) {
-    return <p>Carregando...</p>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-slate-500 animate-pulse">Carregando vistoria...</p>
+      </div>
+    );
   }
 
   const stats = getInspectionStats();
+
+  const hasEmptyRooms = currentInspection.rooms.some(
+    (r) => r.items.length === 0
+  );
 
   const handleAddRoom = () => {
     if (!newRoomName.trim()) return;
@@ -110,35 +138,59 @@ const InspectionDetails = () => {
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-slate-500 uppercase tracking-wider flex items-center gap-2">
             <PieChart className="h-4 w-4" />
-            Resumo
+            Progresso Geral
           </h3>
-          <span className="text-xs font-bold text-primary">
+          <span
+            className={cn(
+              "text-xs font-bold px-2 py-0.5 rounded-full",
+              stats.progress === 100
+                ? "bg-green-100 text-green-700"
+                : "bg-primary/10 text-primary"
+            )}
+          >
             {stats.progress}% Concluído
           </span>
         </div>
 
-        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+        <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-100 shadow-inner">
           <div
-            className="h-full bg-primary transition-all duration-1000 ease-out"
+            className={cn(
+              "h-full transition-all duration-1000 ease-out",
+              stats.progress === 100 ? "bg-green-500" : "bg-primary"
+            )}
             style={{ width: `${stats.progress}%` }}
           />
         </div>
 
+        {hasEmptyRooms && (
+          <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 animate-pulse">
+            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <p className="text-[11px] leading-tight font-medium">
+              Atenção: Existem cômodos sem itens registrados. O progresso só
+              chegará a 100% após incluir ao menos um item em cada cômodo.
+            </p>
+          </div>
+        )}
+
         <div className="grid grid-cols-4 gap-3">
-          <div className="bg-slate-200 p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center gap-1">
+          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center justify-center gap-1">
             <span className="text-2xl font-bold text-slate-700">
               {stats.total}
             </span>
-            <span className="text-[10px] uppercase text-slate-500 font-bold">
-              Total de Itens
+            <span className="text-[9px] uppercase text-slate-500 font-bold text-center leading-none">
+              Itens
+              <br />
+              Totais
             </span>
           </div>
 
-          <div className="bg-green-200 p-3 rounded-xl border border-green-300 flex flex-col items-center justify-center gap-1">
+          <div className="bg-green-50 p-3 rounded-xl border border-green-200 flex flex-col items-center justify-center gap-1">
             <span className="text-2xl font-bold text-green-600">
               {stats.ok}
             </span>
-            <span className="text-[10px] uppercase text-green-600 font-bold">
+            <span className="text-[9px] uppercase text-green-600 font-bold text-center leading-none">
+              Status
+              <br />
               OK
             </span>
           </div>
@@ -147,7 +199,7 @@ const InspectionDetails = () => {
             className={cn(
               "p-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-colors",
               stats.issues > 0
-                ? "bg-red-200 border-red-300"
+                ? "bg-red-50 border-red-200"
                 : "bg-slate-50 border-slate-100"
             )}
           >
@@ -161,11 +213,13 @@ const InspectionDetails = () => {
             </span>
             <span
               className={cn(
-                "text-[10px] uppercase font-bold",
+                "text-[9px] uppercase font-bold text-center leading-none",
                 stats.issues > 0 ? "text-red-600" : "text-slate-400"
               )}
             >
-              Alertas
+              Com
+              <br />
+              Problema
             </span>
           </div>
 
@@ -173,7 +227,7 @@ const InspectionDetails = () => {
             className={cn(
               "p-3 rounded-xl border flex flex-col items-center justify-center gap-1 transition-colors",
               stats.pending > 0
-                ? "bg-amber-100 border-amber-300"
+                ? "bg-amber-50 border-amber-200"
                 : "bg-slate-50 border-slate-100"
             )}
           >
@@ -187,11 +241,13 @@ const InspectionDetails = () => {
             </span>
             <span
               className={cn(
-                "text-[10px] uppercase font-bold",
+                "text-[9px] uppercase font-bold text-center leading-none",
                 stats.pending > 0 ? "text-amber-500" : "text-slate-400"
               )}
             >
-              Pendentes
+              Status
+              <br />
+              Pendente
             </span>
           </div>
         </div>
@@ -202,12 +258,16 @@ const InspectionDetails = () => {
         >
           {({ loading }) => (
             <Button
-              className="w-full gap-2 mt-2"
-              disabled={loading || stats.total === 0}
-              variant={stats.total > 0 ? "default" : "secondary"}
+              className="w-full gap-2 mt-2 h-12"
+              disabled={loading || stats.progress < 100}
+              variant={stats.progress === 100 ? "default" : "outline"}
             >
               <FileText className="h-4 w-4" />
-              {loading ? "Preparando PDF..." : "Baixar Relatório PDF"}
+              {loading
+                ? "Processando..."
+                : stats.progress < 100
+                ? "Conclua a vistoria para baixar o PDF"
+                : "Baixar Relatório Final"}
             </Button>
           )}
         </PDFDownloadLink>
@@ -215,7 +275,9 @@ const InspectionDetails = () => {
 
       <div className="space-y-4 pt-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-forte">Cômodos</h2>
+          <h2 className="text-lg font-bold text-forte">
+            Ambientes Inspecionados
+          </h2>
           <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded-full text-xs font-bold">
             {currentInspection.rooms.length}
           </span>
@@ -226,8 +288,13 @@ const InspectionDetails = () => {
             placeholder="Ex: Cozinha, Banheiro..."
             value={newRoomName}
             onChange={(e) => setNewRoomName(e.target.value)}
+            className="h-11"
           />
-          <Button onClick={handleAddRoom} size="icon" className="shrink-0">
+          <Button
+            onClick={handleAddRoom}
+            size="icon"
+            className="shrink-0 h-11 w-11 shadow-md shadow-primary/20"
+          >
             <Plus className="h-5 w-5" />
           </Button>
         </div>
@@ -238,41 +305,75 @@ const InspectionDetails = () => {
             const roomIssues = room.items.filter(
               (i) => i.status === "issue"
             ).length;
+            const roomPending = room.items.filter(
+              (i) => i.status === "pending"
+            ).length;
             const roomCompleted = room.items.filter(
               (i) => i.status !== "pending"
             ).length;
 
+            const isEmpty = roomItemsCount === 0;
+            const isAllOk =
+              roomItemsCount > 0 &&
+              roomItemsCount === roomCompleted &&
+              roomIssues === 0;
+
             return (
               <Card
                 key={room.id}
-                className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer"
+                className={cn(
+                  "p-4 flex items-center justify-between hover:shadow-md transition-all cursor-pointer border-l-4",
+                  isEmpty
+                    ? "border-l-slate-300 bg-slate-50/50"
+                    : roomIssues > 0
+                    ? "border-l-red-500 bg-red-50/30"
+                    : roomPending > 0
+                    ? "border-l-amber-500 bg-amber-50/30"
+                    : "border-l-green-500 bg-green-50/30"
+                )}
                 onClick={() => navigate(`/vistoria/${id}/comodo/${room.id}`)}
               >
                 <div className="flex items-center gap-3">
-                  {roomItemsCount > 0 && roomItemsCount === roomCompleted ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <div className="h-5 w-5 rounded-full border-2 border-slate-300" />
-                  )}
+                  <div className="shrink-0">
+                    {isEmpty ? (
+                      <CircleDashed className="h-6 w-6 text-slate-300" />
+                    ) : roomIssues > 0 ? (
+                      <AlertCircle className="h-6 w-6 text-red-500" />
+                    ) : isAllOk ? (
+                      <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    ) : (
+                      <CircleDashed className="h-6 w-6 text-amber-500" />
+                    )}
+                  </div>
+
                   <div>
-                    <span className="font-medium text-slate-700 block">
+                    <span className="font-bold text-slate-700 block">
                       {room.name}
                     </span>
 
-                    {roomIssues > 0 && (
-                      <span className="text-[10px] text-red-500 font-bold flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        {roomIssues} problema(s)
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {isEmpty ? (
+                        <span className="text-[10px] text-slate-400 italic">
+                          Pendente de vistoria (vazio)
+                        </span>
+                      ) : (
+                        <>
+                          <span className="text-[10px] text-slate-500 font-medium">
+                            {roomItemsCount}{" "}
+                            {roomItemsCount > 1 ? "itens" : "item"}
+                          </span>
+                          {roomIssues > 0 && (
+                            <span className="text-[10px] text-red-500 font-bold flex items-center gap-1">
+                              • {roomIssues} problema(s)
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-400">
-                    {roomItemsCount} {roomItemsCount > 1 ? "itens" : "item"}
-                  </span>
-
                   <button
                     onClick={(e) => handleDeleteRoom(e, room.id)}
                     className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"

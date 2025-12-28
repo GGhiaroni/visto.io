@@ -155,12 +155,12 @@ export const useInspectionStore = create<InspectionStore>((set, get) => ({
     await get().syncInspections();
   },
 
-  addPhoto: async (itemId, photoUrl) => {
+  addPhoto: async (roomId, itemId, photoUrl) => {
     await addPhotoService(itemId, photoUrl);
     await get().syncInspections();
   },
 
-  deletePhoto: async (photoId) => {
+  deletePhoto: async (roomId, itemId, photoId) => {
     await deletePhotoService(photoId);
     await get().syncInspections();
   },

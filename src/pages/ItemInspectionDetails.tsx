@@ -10,7 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -31,10 +31,22 @@ const ItemInspectionDetails = () => {
     addPhoto,
     deleteItemInspection,
     deletePhoto,
+    syncInspections,
+    setCurrentInspection,
   } = useInspectionStore();
 
   const [addAnnotationText, setAddAnnotationText] = useState("");
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!currentInspection || currentInspection.id !== id) {
+        await syncInspections();
+        if (id) setCurrentInspection(id);
+      }
+    };
+    loadData();
+  }, [id, syncInspections, setCurrentInspection]);
 
   const currentRoom = currentInspection?.rooms.find(
     (room) => room.id === roomId
@@ -97,11 +109,11 @@ const ItemInspectionDetails = () => {
           data: { publicUrl },
         } = supabase.storage.from("visto.io - photos").getPublicUrl(fileName);
 
+        await addPhoto(roomId, itemId, publicUrl);
+
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
-
-        addPhoto(roomId, itemId, publicUrl);
 
         toast.dismiss(toastId);
         toast.success("Foto adicionada!");

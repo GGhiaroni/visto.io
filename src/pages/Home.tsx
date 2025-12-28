@@ -1,4 +1,5 @@
 import { ClipboardList, Eye, History, Plus } from "lucide-react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -9,8 +10,16 @@ import { useInspectionStore } from "../store/inspectionStore";
 const Home = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  const { inspections, setCurrentInspection, getInspectionStats } =
-    useInspectionStore();
+  const {
+    inspections,
+    setCurrentInspection,
+    getInspectionStats,
+    syncInspections,
+  } = useInspectionStore();
+
+  useEffect(() => {
+    syncInspections();
+  }, []);
 
   const userName = user?.user_metadata.name || user?.email?.split("@")[0];
 

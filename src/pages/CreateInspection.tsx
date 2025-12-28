@@ -1,5 +1,5 @@
 import { Building, Loader2, MapPin, Plus, User } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "../components/ui/Button";
@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "../components/ui/Card";
 import { Input } from "../components/ui/Input";
+import { supabase } from "../lib/supabase";
 import { fetchAddressByCep } from "../services/viaCepService";
 import { useInspectionStore } from "../store/inspectionStore";
 
@@ -22,15 +23,23 @@ const CreateInspection = () => {
   const [uf, setUf] = useState("");
 
   const [isLoadingCep, setIsLoadingCep] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const [number, setNumber] = useState("");
   const [complement, setComplement] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
   const { createInspection } = useInspectionStore();
 
-  const handleStartInspection = () => {
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id || null);
+    });
+  }, []);
+
+  const handleStartInspection = async () => {
     if (!clientName || !street || !number || !city) {
       toast.error(
         "Por favor, preencha os dados obrigatórios (Cliente, Rua e Número)."
@@ -38,23 +47,37 @@ const CreateInspection = () => {
       return;
     }
 
-    const fullAddress = `${street}, ${number} ${
-      complement ? `- ${complement}` : ""
-    } - ${neighborhood} - ${city}/${uf}`;
+    if (!userId) {
+      toast.error("Erro de autenticação. Tente fazer login novamente.");
+      return;
+    }
 
-    const idCriado = createInspection(fullAddress, clientName);
+    setIsCreating(true);
 
-    setClientName("");
-    setCep("");
-    setStreet("");
-    setNumber("");
-    setComplement("");
-    setNeighborhood("");
-    setCity("");
+    try {
+      const fullAddress = `${street}, ${number} ${
+        complement ? `- ${complement}` : ""
+      } - ${neighborhood} - ${city}/${uf}`;
 
-    toast.success("Vistoria iniciada com sucesso! Verifique o console!");
+      const idCriado = await createInspection(fullAddress, clientName, userId);
 
-    navigate(`/vistoria/${idCriado}`);
+      setClientName("");
+      setCep("");
+      setStreet("");
+      setNumber("");
+      setComplement("");
+      setNeighborhood("");
+      setCity("");
+
+      toast.success("Vistoria iniciada com sucesso! Verifique o console!");
+
+      navigate(`/vistoria/${idCriado}`);
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao criar vistoria. Tente novamente.");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleBlurCep = async () => {
@@ -209,9 +232,19 @@ const CreateInspection = () => {
               className="w-full h-12 text-base shadow-lg shadow-primary/20 mt-4"
               size="lg"
               onClick={handleStartInspection}
+              disabled={isCreating}
             >
-              <Plus className="mr-2 h-5 w-5" />
-              Iniciar Inspeção
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Criando...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-5 w-5" />
+                  Iniciar Inspeção
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>

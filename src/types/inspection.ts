@@ -36,3 +36,12 @@ export interface Inspection {
   status: "draft" | "completed" | "synced";
   rooms: Room[];
 }
+
+export interface InspectionStats {
+  total: number;
+  completed: number;
+  ok: number;
+  issues: number;
+  progress: number;
+  pending: number;
+}

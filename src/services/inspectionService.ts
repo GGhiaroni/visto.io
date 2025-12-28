@@ -1,7 +1,7 @@
 import { supabase } from "../lib/supabase";
 import type { ItemStatus } from "../types/inspection";
 
-export const fetchInspectionService = async () => {
+export const fetchInspectionsService = async () => {
   const { data, error } = await supabase
     .from("inspections")
     .select(
@@ -18,7 +18,7 @@ export const fetchInspectionService = async () => {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Erro ao bsucar vistorias:", error);
+    console.error("Erro ao buscar vistorias:", error);
     throw error;
   }
 
@@ -65,7 +65,7 @@ export const deleteRoomService = async (roomId: string) => {
 export const addItemService = async (roomId: string, name: string) => {
   const { data, error } = await supabase
     .from("items")
-    .insert([{ roomd_id: roomId, name }])
+    .insert([{ room_id: roomId, name }])
     .select()
     .single();
 

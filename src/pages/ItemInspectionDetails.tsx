@@ -8,6 +8,7 @@ import {
   MessageSquare,
   Send,
   Trash2,
+  X,
 } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 
@@ -18,6 +19,8 @@ import { supabase } from "../lib/supabase";
 import { cn } from "../lib/utils";
 import { useInspectionStore } from "../store/inspectionStore";
 
+import type { Photo } from "../types/inspection";
+
 const ItemInspectionDetails = () => {
   const { id, roomId, itemId } = useParams();
   const navigate = useNavigate();
@@ -27,9 +30,11 @@ const ItemInspectionDetails = () => {
     addAnnotation,
     addPhoto,
     deleteItemInspection,
+    deletePhoto,
   } = useInspectionStore();
 
   const [addAnnotationText, setAddAnnotationText] = useState("");
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
   const currentRoom = currentInspection?.rooms.find(
     (room) => room.id === roomId
@@ -114,6 +119,20 @@ const ItemInspectionDetails = () => {
         deleteItemInspection(roomId, itemId);
         navigate(`/vistoria/${id}/comodo/${roomId}`);
         toast.success("Item excluído com sucesso.");
+      }
+    }
+  };
+
+  const handleDeletePhoto = (e: React.MouseEvent, photoId: string) => {
+    e.stopPropagation();
+
+    if (confirm("Excluir esta foto permanentemente?")) {
+      if (roomId && itemId) {
+        deletePhoto(roomId, itemId, photoId);
+        if (selectedPhoto?.id === photoId) {
+          setSelectedPhoto(null);
+        }
+        toast.success("Foto excluída com sucesso.");
       }
     }
   };
@@ -276,14 +295,18 @@ const ItemInspectionDetails = () => {
         {currentItem.photos.length > 0 ? (
           <div className="grid grid-cols-2 gap-3">
             {currentItem.photos.map((photo) => (
-              <div key={photo.id} className="relative group aspect-square">
+              <div
+                key={photo.id}
+                className="relative group aspect-square cursor-zoom-in"
+                onClick={() => setSelectedPhoto(photo)}
+              >
                 <img
                   src={photo.url}
                   alt="Evidência"
                   className="w-full h-full object-cover rounded-xl border border-slate-100 shadow-sm"
                 />
 
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 rounded-b-xl">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 rounded-b-xl pointer-events-none">
                   <p className="text-[10px] text-white/90 text-right">
                     {new Date(photo.timestamp).toLocaleTimeString("pt-BR", {
                       hour: "2-digit",
@@ -291,6 +314,14 @@ const ItemInspectionDetails = () => {
                     })}
                   </p>
                 </div>
+
+                <button
+                  onClick={(e) => handleDeletePhoto(e, photo.id)}
+                  className="absolute top-2 right-2 bg-white/80 hover:bg-red-50 text-slate-500 hover:text-red-600 p-1.5 rounded-full shadow-sm backdrop-blur-sm transition-opacity opacity-0 group-hover:opacity-100"
+                  title="Excluir foto"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>
@@ -310,6 +341,42 @@ const ItemInspectionDetails = () => {
         capture="environment"
         onChange={handlePhotoSelect}
       />
+
+      {selectedPhoto && (
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <button
+            onClick={() => setSelectedPhoto(null)}
+            className="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 p-2 rounded-full transition-colors z-50"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          <img
+            src={selectedPhoto.url}
+            alt="Tela cheia"
+            className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+          />
+
+          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-between text-white">
+            <div>
+              <p className="text-sm font-medium">Registrada em</p>
+              <p className="text-xs opacity-70">
+                {new Date(selectedPhoto.timestamp).toLocaleString("pt-BR")}
+              </p>
+            </div>
+
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2 bg-red-600/80 hover:bg-red-600 border-none"
+              onClick={(e) => handleDeletePhoto(e, selectedPhoto.id)}
+            >
+              <Trash2 className="h-4 w-4" />
+              Excluir Foto
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

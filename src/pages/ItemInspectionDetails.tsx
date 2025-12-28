@@ -14,7 +14,8 @@ import { type ChangeEvent, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Button } from "../components/ui/Button";
-import { cn, convertFileToBase64 } from "../lib/utils";
+import { supabase } from "../lib/supabase";
+import { cn } from "../lib/utils";
 import { useInspectionStore } from "../store/inspectionStore";
 
 const ItemInspectionDetails = () => {
@@ -72,19 +73,36 @@ const ItemInspectionDetails = () => {
   const handlePhotoSelect = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
-    if (file && roomId && itemId) {
+    if (file && roomId && itemId && id) {
+      const toastId = toast.loading("Enviando foto para a nuvem...");
+
       try {
-        const base64Photo = await convertFileToBase64(file);
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${id}/${roomId}/${itemId}/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("visto.io - photos")
+          .upload(fileName, file);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("visto.io - photos").getPublicUrl(fileName);
 
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
 
-        addPhoto(roomId, itemId, base64Photo);
+        addPhoto(roomId, itemId, publicUrl);
 
+        toast.dismiss(toastId);
         toast.success("Foto adicionada!");
       } catch (error) {
-        console.error("Erro ao converter a imagem", error);
+        toast.dismiss(toastId);
+        console.error("Erro no upload:", error);
         toast.error("Erro ao processar a imagem. Tente novamente mais tarde.");
       }
     }

@@ -4,6 +4,7 @@ import {
   ClipboardClock,
   Plus,
   ThumbsUp,
+  Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -16,7 +17,8 @@ import { useInspectionStore } from "../store/inspectionStore";
 const RoomDetails = () => {
   const { id, roomId } = useParams();
   const navigate = useNavigate();
-  const { currentInspection, addItemInspection } = useInspectionStore();
+  const { currentInspection, addItemInspection, deleteItemInspection } =
+    useInspectionStore();
 
   const [newItemName, setNewItemName] = useState("");
 
@@ -27,6 +29,16 @@ const RoomDetails = () => {
     addItemInspection(roomId, newItemName);
     setNewItemName("");
     toast.success("Item adicionado com sucesso!");
+  };
+
+  const handleDeleteItemInspection = (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation();
+    if (confirm("Tem certeza de que deseja excluir esse item?")) {
+      if (roomId) {
+        deleteItemInspection(roomId, itemId);
+        toast.success("Item excluído com sucesso.");
+      }
+    }
   };
 
   const currentRoom = currentInspection?.rooms.find((r) => r.id === roomId);
@@ -104,13 +116,23 @@ const RoomDetails = () => {
         {currentRoom.items.map((roomItem) => (
           <Card
             key={roomItem.id}
-            className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer active:scale-95 transform"
+            className="p-4 flex items-center justify-between hover:border-primary/50 transition-colors cursor-pointer transform"
             onClick={() =>
               navigate(`/vistoria/${id}/comodo/${roomId}/item/${roomItem.id}`)
             }
           >
             <span className="font-medium text-slate-700">{roomItem.name}</span>
-            <span>{itemInspectionStatus(roomItem.status)}</span>
+
+            <div className="flex items-center gap-3">
+              <span>{itemInspectionStatus(roomItem.status)}</span>
+              <button
+                onClick={(e) => handleDeleteItemInspection(e, roomItem.id)}
+                className="p-2 -mr-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+                title="Excluir item"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </Card>
         ))}
       </div>

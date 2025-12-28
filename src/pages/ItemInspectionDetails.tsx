@@ -76,9 +76,11 @@ const ItemInspectionDetails = () => {
       try {
         const base64Photo = await convertFileToBase64(file);
 
-        addPhoto(roomId, itemId, base64Photo);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
 
-        e.target.value = "";
+        addPhoto(roomId, itemId, base64Photo);
 
         toast.success("Foto adicionada!");
       } catch (error) {
